@@ -8,6 +8,6 @@ compiler.cppstd=17
 build_type=Release
 
 [buildenv]
-CC=/rerun_cpp/l4t-gcc/bin/aarch64-buildroot-linux-gnu-cc
-CXX=/rerun_cpp/l4t-gcc/bin/aarch64-buildroot-linux-gnu-g++
-LD=/rerun_cpp/l4t-gcc/bin/aarch64-buildroot-linux-gnu-ld
+CC=/l4t-gcc/bin/aarch64-buildroot-linux-gnu-cc
+CXX=/l4t-gcc/bin/aarch64-buildroot-linux-gnu-g++
+LD=/l4t-gcc/bin/aarch64-buildroot-linux-gnu-ld
