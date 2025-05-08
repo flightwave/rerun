@@ -35,6 +35,21 @@ class RerunCppSdkConan(ConanFile):
         else:
             raise ConanException("Could not find sdk_info.h at path: " + sdk_info_path)
 
+    def build_requirements(self):
+        if self.settings.arch == "armv8":
+            url = "https://developer.nvidia.com/embedded/jetson-linux/bootlin-toolchain-gcc-93"
+            archive_name = "bootlin-toolchain-gcc-93"
+            toolchain_dir = os.path.join("/l4t-gcc/", "")
+            archive_path = os.path.join("/l4t-gcc/", archive_name)
+
+            if not os.path.exists(toolchain_dir):
+                mkdir(self, toolchain_dir)
+                download(self, url, archive_path)
+
+                with tarfile.open(archive_path) as tar:
+                    tar.extractall(path=toolchain_dir)
+
+
     def source(self):
         sdk_url = (
             f"https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip"
@@ -50,19 +65,6 @@ class RerunCppSdkConan(ConanFile):
             self.source_folder, "lib", self._c_lib_filename()
         )
         tc.generate()
-
-        if self.settings.arch == "armv8":
-            url = "https://developer.nvidia.com/embedded/jetson-linux/bootlin-toolchain-gcc-93"
-            archive_name = "bootlin-toolchain-gcc-93"
-            toolchain_dir = os.path.join("/l4t-gcc/", "")
-            archive_path = os.path.join("/l4t-gcc/", archive_name)
-
-            if not os.path.exists(toolchain_dir):
-                mkdir(self, toolchain_dir)
-                download(self, url, archive_path)
-
-                with tarfile.open(archive_path) as tar:
-                    tar.extractall(path=toolchain_dir)
 
         deps = CMakeDeps(self)
         deps.generate()
