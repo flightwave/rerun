@@ -1,0 +1,13 @@
+[settings]
+os=Linux
+arch=armv8
+compiler=gcc
+compiler.version=10
+compiler.libcxx=libstdc++11
+compiler.cppstd=17
+build_type=Release
+
+[buildenv]
+CC=/rerun_cpp/l4t-gcc/bin/aarch64-buildroot-linux-gnu-cc
+CXX=/rerun_cpp/l4t-gcc/bin/aarch64-buildroot-linux-gnu-g++
+LD=/rerun_cpp/l4t-gcc/bin/aarch64-buildroot-linux-gnu-ld

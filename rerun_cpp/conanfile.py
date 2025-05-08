@@ -1,9 +1,10 @@
 from conan import ConanFile
-from conan.tools.files import get, copy
+from conan.tools.files import get, copy, mkdir, download
 from conan.tools.cmake import cmake_layout, CMakeToolchain, CMakeDeps, CMake
 from conan.errors import ConanException
 import os, glob
 import re
+import tarfile
 
 class RerunCppSdkConan(ConanFile):
     name            = "rerun_cpp_sdk"
@@ -49,6 +50,19 @@ class RerunCppSdkConan(ConanFile):
             self.source_folder, "lib", self._c_lib_filename()
         )
         tc.generate()
+
+        if self.settings.arch == "armv8":
+            url = "https://developer.nvidia.com/embedded/jetson-linux/bootlin-toolchain-gcc-93"
+            archive_name = "bootlin-toolchain-gcc-93"
+            toolchain_dir = os.path.join("/l4t-gcc/", "")
+            archive_path = os.path.join("/l4t-gcc/", archive_name)
+
+            if not os.path.exists(toolchain_dir):
+                mkdir(self, toolchain_dir)
+                download(self, url, archive_path)
+
+                with tarfile.open(archive_path) as tar:
+                    tar.extractall(path=toolchain_dir)
 
         deps = CMakeDeps(self)
         deps.generate()
