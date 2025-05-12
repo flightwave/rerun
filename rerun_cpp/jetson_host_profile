@@ -7,7 +7,5 @@ compiler.libcxx=libstdc++11
 compiler.cppstd=17
 build_type=Release
 
-[buildenv]
-CC=/l4t-gcc/bin/aarch64-buildroot-linux-gnu-cc
-CXX=/l4t-gcc/bin/aarch64-buildroot-linux-gnu-g++
-LD=/l4t-gcc/bin/aarch64-buildroot-linux-gnu-ld
+[tool_requires]
+l4t-toolchain/1.0

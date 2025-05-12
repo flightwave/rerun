@@ -156,3 +156,14 @@ As of writing we tested the SDK against:
 * Apple Clang 14, 15
 * GCC 9, 10, 12
 * Visual Studio 2022
+
+## Conan Cross-Build
+
+```
+cp jetson_host_profile ~/.conan2/profiles/
+
+conan export . --name=l4t-toolchain --version=1.0
+
+conan create . --profile:build=default --profile:host=jetson_host_profile --build=missing
+
+```
