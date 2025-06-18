@@ -12,8 +12,14 @@ class RerunCppSdkConan(ConanFile):
     url             = "https://github.com/rerun-io/rerun"
     description     = "Rerun C++ SDK with embedded Rust C core"
     settings        = "os", "arch", "compiler", "build_type"
-    options         = {"shared": [True, False]}
-    default_options = {"shared": False}
+    options         = {
+        "shared": [True, False],
+        "fPIC": [True, False],
+    }
+    default_options = {
+        "shared": True,
+        "fPIC": True,
+    }
     requires        = ["arrow/15.0.0"]
     exports_sources = "lib/*", "src/*", "CMakeLists.txt"
     no_copy_source  = False
