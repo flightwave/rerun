@@ -2,9 +2,18 @@ from conan import ConanFile
 from conan.tools.files import get, copy, mkdir, download
 from conan.tools.cmake import cmake_layout, CMakeToolchain, CMakeDeps, CMake
 from conan.errors import ConanException
+
 import os, glob
 import re
-import tarfile
+import shutil
+
+def _normalized_export_paths(patterns):
+    # Strip trailing globs like *, *.cpp, **/*.h etc
+    cleaned = set()
+    for pattern in patterns:
+        cleaned.add(re.split(r'[*?\[]', pattern)[0].rstrip("/\\"))
+    return cleaned
+
 
 class RerunCppSdkConan(ConanFile):
     name            = "rerun_cpp_sdk"
@@ -20,8 +29,8 @@ class RerunCppSdkConan(ConanFile):
         "shared": True,
         "fPIC": True,
     }
-    requires        = ["arrow/15.0.0"]
-    exports_sources = "lib/*", "src/*", "CMakeLists.txt"
+    requires        = ["arrow/20.0.0"]
+    exports_sources = "src/*", "CMakeLists.txt"
     no_copy_source  = False
 
     def layout(self):
@@ -41,12 +50,37 @@ class RerunCppSdkConan(ConanFile):
         else:
             raise ConanException("Could not find sdk_info.h at path: " + sdk_info_path)
 
-
     def source(self):
-        sdk_url = (
-            f"https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip"
-        )
+        # This approach moves the sources coming from this recipes' folder to a
+        # backup path (inside conan's cache) and then overwrite what we are downloading.
+        # This is done this way since we need the lib/ files from the upstream sources
+
+        renamed = []
+        paths = _normalized_export_paths(self.exports_sources)
+
+        for path in paths:
+            abs_path = os.path.join(self.source_folder, path)
+            backup_path = abs_path + "__backup__"
+            if os.path.exists(abs_path):
+                shutil.move(abs_path, backup_path)
+                renamed.append((backup_path, abs_path))
+                self.output.info(f"Renamed: {path} -> {os.path.basename(backup_path)}")
+
+
+        # 2. Download SDK
+        sdk_url = "https://github.com/rerun-io/rerun/releases/latest/download/rerun_cpp_sdk.zip"
         get(self, sdk_url, strip_root=True)
+
+        # 3. Restore backups over SDK contents
+        for backup, target in renamed:
+            if os.path.exists(target):
+                if os.path.isdir(target):
+                    shutil.rmtree(target)
+                else:
+                    os.remove(target)
+            shutil.move(backup, target)
+            self.output.info(f"Restored: {target}")
+
 
     def generate(self):
         tc = CMakeToolchain(self)

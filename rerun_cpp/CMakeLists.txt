@@ -29,8 +29,6 @@ target_include_directories(rerun_sdk PUBLIC
 # Rerun needs at least C++17.
 target_compile_features(rerun_sdk PUBLIC cxx_std_17)
 
-target_compile_options(rerun_sdk PRIVATE -fvisibility=default)
-
 # Do multithreaded compiling on MSVC.
 if(MSVC)
     target_compile_options(rerun_sdk PRIVATE "/MP")
@@ -110,7 +108,7 @@ target_link_libraries(rerun_sdk PRIVATE rerun_c)
 # -----------------------------------------------------------------------------
 # Arrow dependency.
 # This makes the setup a lot easier on Windows where we otherwise need to put Arrow.dll either in path or copy it with the executable.
-option(RERUN_DOWNLOAD_AND_BUILD_ARROW "If enabled, arrow will be added as an external project and built with the minimal set required by the Rerun C++ SDK" ON)
+option(RERUN_DOWNLOAD_AND_BUILD_ARROW "If enabled, arrow will be added as an external project and built with the minimal set required by the Rerun C++ SDK" OFF)
 
 if (NOT RERUN_DOWNLOAD_AND_BUILD_ARROW)
     find_package(Arrow REQUIRED)
