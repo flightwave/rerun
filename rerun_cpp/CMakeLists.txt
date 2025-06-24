@@ -29,6 +29,8 @@ target_include_directories(rerun_sdk PUBLIC
 # Rerun needs at least C++17.
 target_compile_features(rerun_sdk PUBLIC cxx_std_17)
 
+target_compile_options(rerun_sdk PRIVATE -fvisibility=default)
+
 # Do multithreaded compiling on MSVC.
 if(MSVC)
     target_compile_options(rerun_sdk PRIVATE "/MP")
