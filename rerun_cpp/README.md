@@ -232,8 +232,97 @@ The Conan build automatically handles these dependencies:
 * **Boost** - Various utilities
 * **Other system dependencies** - Automatically resolved
 
+### Cross-Compilation for Raspberry Pi
+
+The Rerun C++ SDK supports cross-compilation for ARM architectures like Raspberry Pi. However, since the pre-built `rerun_c` libraries are only available for x86_64 and ARM64 architectures, you need to build the `rerun_c` library from source for ARM32 (armv7hf) targets.
+
+#### Prerequisites
+
+1. **Install ARM cross-compilation toolchain**:
+   ```bash
+   sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+   ```
+
+2. **Install Rust with ARM target support**:
+   ```bash
+   rustup target add arm-unknown-linux-gnueabihf
+   ```
+
+#### Building rerun_c for ARM
+
+1. **Navigate to the main rerun repository** (parent directory of rerun_cpp):
+   ```bash
+   cd ..  # From rerun_cpp directory to main rerun directory
+   ```
+
+2. **Build the rerun_c library for ARM**:
+   ```bash
+   CC_arm_unknown_linux_gnueabihf=arm-linux-gnueabihf-gcc \
+   CXX_arm_unknown_linux_gnueabihf=arm-linux-gnueabihf-g++ \
+   AR_arm_unknown_linux_gnueabihf=arm-linux-gnueabihf-ar \
+   CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc \
+   cargo build --release --target arm-unknown-linux-gnueabihf --package rerun_c
+   ```
+
+3. **Copy the built library to rerun_cpp**:
+   ```bash
+   mkdir -p rerun_cpp/lib_arm
+   cp target/arm-unknown-linux-gnueabihf/release/librerun_c.a rerun_cpp/lib_arm/
+   ```
+
+#### Cross-Compiling with Conan
+
+After building the ARM `rerun_c` library, you can cross-compile the C++ SDK using Conan with a cross-compilation profile:
+
+1. **Create or use an ARM cross-compilation profile** (e.g., `profiles/armhf`):
+   ```ini
+   [settings]
+   arch=armv7hf
+   build_type=Release
+   compiler=gcc
+   compiler.cppstd=17
+   compiler.libcxx=libstdc++11
+   compiler.version=13
+   os=Linux
+
+   [tool_requires]
+   *: cmake/3.27.7
+
+   [conf]
+   tools.cmake.cmaketoolchain:system_name=Linux
+   tools.cmake.cmaketoolchain:system_processor=arm
+
+   [buildenv]
+   CC=arm-linux-gnueabihf-gcc
+   CXX=arm-linux-gnueabihf-g++
+   AR=arm-linux-gnueabihf-ar
+   STRIP=arm-linux-gnueabihf-strip
+   RANLIB=arm-linux-gnueabihf-ranlib
+   CFLAGS=-Wno-error -Wno-type-limits -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -fPIC
+   CXXFLAGS=-Wno-error -Wno-type-limits -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -fPIC -std=c++17
+   ```
+
+2. **Build and install the cross-compiled SDK**:
+   ```bash
+   cd rerun_cpp
+   conan create . --profile:host=path/to/profiles/armhf --build=missing
+   ```
+
+#### How It Works
+
+The cross-compilation process works by:
+
+1. **Pre-building the Rust components**: The `rerun_c` library contains all the Rust-based functionality and is built separately using Cargo with ARM cross-compilation.
+
+2. **Using pre-built ARM library**: The modified conanfile.py detects ARM architectures and uses the pre-built `librerun_c.a` from the `lib_arm/` directory instead of trying to use non-existent pre-compiled binaries.
+
+3. **Cross-compiling C++ code**: The C++ SDK code is then compiled using the ARM cross-compiler toolchain, linking against the pre-built ARM `rerun_c` library.
+
+This approach ensures that both the Rust components and C++ components are properly compiled for the target ARM architecture.
+
 ### Troubleshooting Conan Build
 
 * **Missing loguru**: The build will warn if loguru is not found but will continue without logging support
 * **Arrow build issues**: Make sure you have sufficient disk space and memory for the Arrow build
 * **Toolchain issues**: Ensure you're using the Conan-generated toolchain file in your CMake configuration
+* **ARM cross-compilation**: Ensure you have the ARM cross-compilation toolchain installed and the `rerun_c` library pre-built for ARM as described above
